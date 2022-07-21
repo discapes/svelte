@@ -120,25 +120,5 @@ export function renderer_invalidate(renderer: Renderer, name: string, value?, ma
 
 	if (main_execution_context) return;
 
-	// if this is a reactive declaration, invalidate dependencies recursively
-	const deps = new Set([name]);
-
-	deps.forEach(name => {
-		const reactive_declarations = renderer.component.reactive_declarations.filter(x =>
-			x.assignees.has(name)
-		);
-		reactive_declarations.forEach(declaration => {
-			declaration.dependencies.forEach(name => {
-				deps.add(name);
-			});
-		});
-	});
-
-	// TODO ideally globals etc wouldn't be here in the first place
-	const filtered = Array.from(deps).filter(n => renderer.context_lookup.has(n));
-	if (!filtered.length) return null;
-
-	return filtered
-		.map(n => x`$$invalidate(${renderer.context_lookup.get(n).index}, ${n})`)
-		.reduce((lhs, rhs) => x`${lhs}, ${rhs}`);
+	return x`$$invalidate(${renderer.context_lookup.get(name).index}, ${name})`;
 }
